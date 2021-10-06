@@ -1,17 +1,26 @@
 package com.imaginegames.game.worlds;
+import com.badlogic.gdx.utils.Null;
+import com.imaginegames.game.utils.math.IntPair;
 
-public class Chunk extends WorldRegion {
-    private static final int chunkWidth = 16, chunkHeight = 16;
+import java.util.Arrays;
 
-    public Chunk(int x, int y) {
-        super(x, y, chunkWidth, chunkHeight);
+public class Chunk {
+    private static final byte size = 3;
+    private IntPair xy;
+    private int[][] cells;
+
+    public Chunk(IntPair xy, int[][] cells) {
+        this.xy = xy;
+        if (cells != null) this.cells = cells;
+        else this.cells = new int[size][size];
     }
 
-    public int getChunkWidth() {
-        return chunkWidth;
+    public IntPair getXY() { return xy; }
+    public static int getSize() {
+        return size;
     }
-
-    public int getChunkHeight() {
-        return chunkHeight;
+    public int[][] getCells() {
+        return cells;
     }
+    public void setCells(@Null int[][] cells) { this.cells = cells; }
 }

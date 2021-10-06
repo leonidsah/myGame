@@ -1,6 +1,7 @@
 package com.imaginegames.game.ui.chat;
 
 import com.badlogic.gdx.ApplicationLogger;
+import com.imaginegames.game.ui.chat.messages.TextMessage;
 
 /**
  * An implementation of {@link ApplicationLogger} that sends log messages to {@link ChatLabel} in order to

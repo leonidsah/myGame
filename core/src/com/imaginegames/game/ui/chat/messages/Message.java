@@ -1,4 +1,4 @@
-package com.imaginegames.game.ui.chat;
+package com.imaginegames.game.ui.chat.messages;
 
 public interface Message {
     // Called when a message is received by a MessageHandler

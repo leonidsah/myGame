@@ -1,4 +1,4 @@
-package com.imaginegames.game.ui.chat;
+package com.imaginegames.game.ui.chat.messages;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Widget;
 

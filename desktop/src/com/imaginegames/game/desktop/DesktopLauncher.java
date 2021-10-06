@@ -14,8 +14,7 @@ public class DesktopLauncher {
 		settings.maxWidth = 2048;
 		settings.maxHeight = 2048;
 		settings.silent = true;
-		TexturePacker.process(settings,"D:\\MilitaryMadness\\android\\assets\\textures\\raw",
-				"D:\\MilitaryMadness\\android\\assets\\textures", "pack");
+		//TexturePacker.process(settings,"android/assets/textures/raw", "android/assets/textures/textures", "pack");
 		// Setting up the LWJGL application
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.foregroundFPS = 120;

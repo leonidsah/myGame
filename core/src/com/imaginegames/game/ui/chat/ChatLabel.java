@@ -1,6 +1,10 @@
 package com.imaginegames.game.ui.chat;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.imaginegames.game.ui.chat.messages.Message;
+import com.imaginegames.game.ui.chat.messages.MessageHandler;
+import com.imaginegames.game.ui.chat.messages.MessageType;
+import com.imaginegames.game.ui.chat.messages.TextMessage;
 
 import java.util.ArrayList;
 

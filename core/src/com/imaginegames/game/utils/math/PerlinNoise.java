@@ -1,4 +1,4 @@
-package com.imaginegames.game.utils;
+package com.imaginegames.game.utils.math;
 
 // JAVA REFERENCE IMPLEMENTATION OF IMPROVED NOISE - COPYRIGHT 2002 KEN PERLIN.
 public final class PerlinNoise {
