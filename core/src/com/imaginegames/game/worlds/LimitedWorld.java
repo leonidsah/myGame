@@ -5,6 +5,16 @@ public class World {
     private int height;
     private int[][] cells;
 
+    private long seed;
+
+    public World(long seed) {
+        this.seed = seed;
+    }
+
+    public long getSeed() {
+        return seed;
+    }
+
     public World(int[][] cells) {
         this.cells = cells;
         this.height = cells.length;
