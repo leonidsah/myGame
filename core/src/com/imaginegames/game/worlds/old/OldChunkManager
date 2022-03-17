@@ -1,0 +1,108 @@
+package com.imaginegames.game.worlds.old;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.imaginegames.game.utils.math.IntPair;
+import com.imaginegames.game.utils.math.MatrixGenerator;
+import com.imaginegames.game.worlds.Chunk;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import static java.lang.Math.abs;
+
+public class ChunkManager {
+    private String worldFileName;
+    private DataInputStream dis;
+    private int worldWidth, worldHeight, worldCWidth, worldCHeight;
+
+    public ChunkManager(String worldFileName) {
+        this.worldFileName = worldFileName;
+    }
+
+    // Returns true if loading is successful (e.g. no exceptions have occurred during reading file)
+    public boolean loadFromLimitedWorld(Chunk[] chunks) {
+        int worldWidth, worldHeight, cellCount = 0, cellX = 0, cellY = 0, val;
+        HashMap<IntPair, Chunk> chunkMap = new HashMap<>();
+        try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(Gdx.files.local("localAssets/worlds/" + worldFileName).file())))) {
+            worldWidth = dis.readInt();
+            worldHeight = dis.readInt();
+            worldCWidth = worldWidth / Chunk.getSize();
+            worldCHeight = worldWidth / Chunk.getSize();
+
+            if (worldWidth <= 0 || worldHeight <= 0) {
+                throw new IllegalArgumentException("Wrong/corrupted world file: WorldWidth or WorldHeight was read as value which is <= 0");
+            }
+            /*for (Chunk c : chunks) {
+                int x = c.getXY().getX() >= 0 ? c.getXY().getX() % (worldCWidth) :
+                        (worldCWidth - (abs(c.getXY().getX() % (worldCWidth)))) % worldCWidth;
+                int y = c.getXY().getY() >= 0 ? c.getXY().getY() % (worldCHeight) :
+                        (worldCHeight - (abs(c.getXY().getY() % (worldCHeight)))) % worldCWidth;
+                chunkMap.put(new IntPair(x, y), c);
+            }*/
+
+            while (dis.available() > 0) {
+                val = dis.readInt();
+                Chunk c = chunkMap.get(new IntPair(cellX / Chunk.getSize(), cellY / Chunk.getSize()));
+                if (c != null) {
+                    int[][] cells = c.getCells();
+                    cells[cellX % Chunk.getSize()][cellY % Chunk.getSize()] = val;
+                }
+                cellCount++;
+                cellX = cellCount % worldWidth;
+                cellY = cellCount / worldWidth;
+            }
+            return true;
+        }
+        catch (IOException e) {
+            System.err.printf("An exception has occurred in ChunkManager: %s :: %s", e.toString(), e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean save(Chunk[] chunks, String proceduralWorldName) {
+        FileHandle file = Gdx.files.local("localAssets/worlds/" + proceduralWorldName);
+        try {
+            if (!file.file().exists()) System.out.println(file.file().mkdirs());
+            file = file.child("test");
+            if (!file.file().exists()) file.file().createNewFile();
+            ObjectOutputStream oos = new ObjectOutputStream(
+                    new BufferedOutputStream(
+                            new FileOutputStream(
+                                    Gdx.files.local("localAssets/worlds/" + proceduralWorldName + "/test").file())));
+            oos.writeObject(chunks);
+            oos.close();
+            return true;
+        }
+        catch (IOException e) {
+            System.err.printf("\nAn exception has occurred in ChunkManager-save: %s :: %s", e.toString(), e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean load(Chunk[] chunks, String proceduralWorldName) {
+        FileHandle file = Gdx.files.local("localAssets/worlds/" + proceduralWorldName);
+        if (!file.file().exists()) return false;
+        file = file.child("test");
+        if (!file.file().exists()) return false;
+        try (ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file.file()))))
+        {
+            Chunk[] readChunks = (Chunk[]) ois.readObject();
+            for (int i = 0; i < chunks.length; i++) {
+                chunks[i] = readChunks[i];
+            }
+            return true;
+        }
+        catch (Exception e) {
+            System.err.printf("\nAn exception has occurred in ChunkManager-load: %s :: %s", e.toString(), e.getMessage());
+            return false;
+        }
+    }
+}

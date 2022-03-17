@@ -3,7 +3,6 @@ package com.imaginegames.game.screens.game;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -24,15 +23,14 @@ import com.imaginegames.game.screens.mainmenu.MainMenuScreen;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.ui.chat.Command;
 import com.imaginegames.game.ui.chat.messages.TextMessage;
-import com.imaginegames.game.utils.math.IntPair;
 import com.imaginegames.game.worlds.Chunk;
+import com.imaginegames.game.worlds.ChunkFieldRenderer;
 import com.imaginegames.game.worlds.ChunkManager;
-import com.imaginegames.game.worlds.WorldManager;
-import com.imaginegames.game.worlds.WorldRenderer;
+import com.imaginegames.game.worlds.ProceduralWorld;
 
 import java.util.ArrayList;
 
-public class GameScreen implements Screen {
+public class GameScreen implements com.badlogic.gdx.Screen {
     private final MilitaryMadnessMain game;
     private final SpriteBatch sb = new SpriteBatch();
     private UI ui;
@@ -44,18 +42,22 @@ public class GameScreen implements Screen {
     private TiledMapTileLayer tiledMapTileLayer;
     private float unitScale = 1 / 32f;
     private ArrayList<Sprite> rectangleSprites;
-    private Texture cursorTexture, chunksFieldTexture;
-    private ChunkManager cm;
-    private final int chunksFieldSize = 9;
-    private Chunk[][] chunksField = new Chunk[chunksFieldSize][chunksFieldSize];
-    private float cursorx = 0, cursory = 0, oldcursorx = 0, oldcursory = 0;
     private BitmapFont font;
-    private Pixmap fieldpix;
-    private int fieldTextureSize;
-    private long time = 0;
 
-    public GameScreen(MilitaryMadnessMain game) {
+    private ProceduralWorld world;
+    private ChunkManager chunkManager;
+    private ChunkFieldRenderer chunkFieldRenderer;
+    private Chunk[][] chunkField;
+    byte chunksFieldWidth, chunksFieldHeight, chunkSize;
+    private float cursorX, cursorY;
+    private Texture cursorTexture;
+
+
+    float time = 0, lastTime = 0;
+
+    public GameScreen(MilitaryMadnessMain game, ProceduralWorld world) {
         this.game = game;
+        this.world = world;
     }
 
     private void initAssets() {
@@ -124,137 +126,76 @@ public class GameScreen implements Screen {
                         } else chat.handleConsoleMessage("[RED]Wrong arguments. Usage: /cam.zoom (-zoomBy)[]");
                     }
                 });
-                chat.getCommandProcessor().addCommand(new Command("world-reset", true) {
-                    @Override
-                    public void execute(String[] argv) {
-                        chat.handleConsoleMessage("Resetting the world... ");
-                        WorldManager.save(WorldManager.WorldGenerator.logarithmic(90, 90), "world.mm");
-                    }
-                });
-                if (Gdx.app.getType() == Application.ApplicationType.Desktop)
-                    chat.getCommandProcessor().addCommand(new Command("world-print", false) {
-                        @Override
-                        public void execute() {
-                            chat.handleConsoleMessage("Printing the world... ");
-                            WorldManager.synopsis(WorldManager.load("world.mm"), false);
-                        }
-                    });
             }
         };
         ui.show();
+        ui.chat.handleConsoleMessage("Use WASD and Shift to move");
 
         initAssets();
         handleControlKeys();
         // Setting up the camera
         aspectRatio = 9f / 16f;//(float) Gdx.graphics.getHeight() / (float) Gdx.graphics.getWidth();
         cam = new OrthographicCamera();
-        cam.zoom = 1.2f;
+        cam.zoom = 3.0f;
         gameViewport = new ScreenViewport(cam);
         gameViewport.setUnitsPerPixel(unitScale);
 
         // Tiled map part
-        mapRenderer = new OrthogonalTiledMapRenderer(tiledMap, unitScale);
-        // Other
+        //mapRenderer = new OrthogonalTiledMapRenderer(tiledMap, unitScale);
+
+        // Worlds
+        //WorldManager.save(WorldManager.WorldGenerator.logarithmic(90, 90), "world.mm");
         Pixmap pix = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
-        pix.setColor(Color.DARK_GRAY);
+        pix.setColor(Color.RED);
         pix.fillRectangle(12, 0, 8, 32);
         pix.fillRectangle(0, 12, 32, 8);
-        pix.setColor(Color.RED);
-        pix.drawRectangle(12, 0, 8, 32);
-        pix.drawRectangle(0, 12, 32, 8);
+        pix.setColor(Color.DARK_GRAY);
+        pix.fillRectangle(13, 1, 6, 30);
+        pix.fillRectangle(1, 13, 30, 6);
         cursorTexture = new Texture(pix);
         pix.dispose();
 
-        WorldManager.save(WorldManager.WorldGenerator.logarithmic(90, 90), "world.mm");
+        chunkManager = new ChunkManager(world, (byte) 16, (byte) 10);
 
-        cm = new ChunkManager("world.mm");
-        for (int y = 0; y < chunksFieldSize; y++) {
-            for (int x = 0; x < chunksFieldSize; x++) {
-                chunksField[y][x] = new Chunk(new IntPair(30 + x, 30 + y), null);
-            }
-        }
-        Chunk[] chunks = new Chunk[chunksFieldSize * chunksFieldSize];
-        for (int i = 0; i < chunksFieldSize; i++) {
-            for (int j = 0; j < chunksFieldSize; j++) {
-                chunks[i * chunksFieldSize + j] = chunksField[i][j];
-            }
-        }
-        cm.load(chunks);
-        fieldpix = new Pixmap(chunksFieldSize * (int) Chunk.getSize(), chunksFieldSize * (int) Chunk.getSize(), Pixmap.Format.RGBA8888);
-        fieldpix.setBlending(Pixmap.Blending.None);
-        WorldRenderer wr = new WorldRenderer();
-        fieldTextureSize = Chunk.getSize() * chunksFieldSize;
-    }
+        chunksFieldWidth = chunkManager.getChunkFieldWidth();
+        chunksFieldHeight = chunkManager.getChunkFieldHeight();
+        chunkSize = chunkManager.getChunkSize();
 
-    public void reloadChunks() {
-        if ((int) cursorx / Chunk.getSize() != (int) oldcursorx / Chunk.getSize() || (int) cursory / Chunk.getSize() != (int) oldcursory / Chunk.getSize()) {
-            for (int y = 0; y < chunksFieldSize; y++) {
-                for (int x = 0; x < chunksFieldSize; x++) {
-                    chunksField[y][x] = new Chunk(new IntPair(30 + (int) cursorx / Chunk.getSize() + x, 30 - (int) cursory / Chunk.getSize() + y), null);
-                }
-            }
-            Chunk[] chunks = new Chunk[chunksFieldSize * chunksFieldSize];
-            for (int i = 0; i < chunksFieldSize; i++) {
-                for (int j = 0; j < chunksFieldSize; j++) {
-                    chunks[i * chunksFieldSize + j] = chunksField[i][j];
-                }
-            }
-            if (cursorx / Chunk.getSize() != oldcursorx / Chunk.getSize() || cursory / Chunk.getSize() != oldcursory / Chunk.getSize()) {
-                long begin = System.nanoTime();
-                cm.load(chunks);
-                long end = System.nanoTime();
-                //System.out.print("\rReload execution time: " + (end - begin) / 1000.0 / 1000.0 + " ms");
-                oldcursorx = cursorx;
-                oldcursory = cursory;
-            }
-        }
-    }
+        chunkFieldRenderer = new ChunkFieldRenderer(sb, chunksFieldWidth, chunksFieldHeight, chunkSize);
 
-    public void renderChunks() {
-        long begin = System.nanoTime();
-        int color = 0x889977FF, alpha;
-        for (int cy = 0; cy < chunksFieldSize; cy++) {
-            for (int cx = 0; cx < chunksFieldSize; cx++) {
-                int cells[][] = chunksField[cy][cx].getCells();
-                for (int y = 0; y < Chunk.getSize(); y++) {
-                    for (int x = 0; x < Chunk.getSize(); x++) {
-                        alpha = (cells[y][x] * 8) % 256;
-                        fieldpix.drawPixel(x + Chunk.getSize() * cx, y + Chunk.getSize() * cy, color - alpha);
-                    }
-                }
-            }
-        }
+        chunkManager.updateChunkField(0, 0);
+        chunkField = chunkManager.getChunkField();
 
-        chunksFieldTexture = new Texture(fieldpix);
-        sb.begin();
 
-        sb.draw(chunksFieldTexture,
-                -(chunksFieldSize * Chunk.getSize()) / 2 + ((int) cursorx / Chunk.getSize()) * Chunk.getSize(),
-                -(chunksFieldSize * Chunk.getSize()) / 2 + ((int) cursory / Chunk.getSize()) * Chunk.getSize(),
-                fieldTextureSize, fieldTextureSize);
-        sb.draw(cursorTexture, cursorx, cursory, 1, 1);
-        sb.end();
-        long end = System.nanoTime();
-        //System.out.print("\rRender execution time: " + (end - begin) / 1000.0 / 1000.0 + " ms");
+        cursorX = 0;
+        cursorY = 0;
+        //cursorX += chunksFieldWidth % 2 != 0 ? chunkSize / 2.0f : 0;
+        //cursorY += chunksFieldHeight % 2 != 0 ? chunkSize / 2.0f : 0;
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.05f, 0.05f, 0.05f, 1f);
+        Gdx.gl.glClearColor(0.15f, 0.15f, 0.15f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         ui.act(delta);
         handlePlayerControl(delta);
-        // Rendering map
-        mapRenderer.setView(cam);
-        //mapRenderer.render();
-        sb.begin();
-        sb.end();
-        reloadChunks();
-        // Update camera
-        cam.translate(cursorx - cam.position.x, cursory - cam.position.y);
+
+        time += delta;
+        if (time - lastTime >= 0.8f) {
+            lastTime = time;
+            ui.chat.handleConsoleMessage("x: " + cursorX + "    y: " + cursorY);
+        }
+
+        //cam.translate(cursorX - cam.position.x, cursorY - cam.position.y);
         cam.update();
         sb.setProjectionMatrix(cam.combined);
-        renderChunks();
+
+        chunkFieldRenderer.render(chunkField, cursorX, cursorY);
+
+        sb.begin();
+        float cursorWidth = 1, cursorHeight = 1;
+        sb.draw(cursorTexture, cursorX - cursorWidth / 2.0f, cursorY - cursorHeight / 2.0f, cursorWidth, cursorHeight);
+        sb.end();
         ui.draw();
     }
 
@@ -275,7 +216,6 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
-        // Method "hide" is called when you close app manually on desktop
         dispose();
     }
 
@@ -284,7 +224,7 @@ public class GameScreen implements Screen {
         ui.dispose();
         Gdx.input.setInputProcessor(null);
         sb.dispose();
-        fieldpix.dispose();
+        cursorTexture.dispose();
     }
 
     public void handleControlKeys() {
@@ -311,12 +251,16 @@ public class GameScreen implements Screen {
                         if (keycode == Input.Keys.LEFT) cam.translate(-1f * cam.zoom, 0f);
                         if (keycode == Input.Keys.RIGHT) cam.translate(1f * cam.zoom, 0f);
                         if (keycode == Input.Keys.UP || keycode == Input.Keys.DOWN || keycode == Input.Keys.LEFT || keycode == Input.Keys.RIGHT) {
-                            System.out.printf("Camera pos: %f X %f\n", cam.position.x, cam.position.y);
+                            ui.chat.handleConsoleMessage("Current camera's position: " + cam.position.x + " " + cam.position.y);
                         }
-                        if ((keycode == Input.Keys.EQUALS || keycode == Input.Keys.RIGHT_BRACKET) && cam.zoom > 0.1f)
+                        if ((keycode == Input.Keys.EQUALS || keycode == Input.Keys.RIGHT_BRACKET) && cam.zoom > 0.1f) {
                             cam.zoom -= 0.1f;
-                        if ((keycode == Input.Keys.MINUS || keycode == Input.Keys.LEFT_BRACKET) && cam.zoom < 3.0f)
+                            ui.chat.handleConsoleMessage("Current camera's zoom: " + cam.zoom);
+                        }
+                        if ((keycode == Input.Keys.MINUS || keycode == Input.Keys.LEFT_BRACKET) && cam.zoom < 8.0f) {
                             cam.zoom += 0.1f;
+                            ui.chat.handleConsoleMessage("Current camera's zoom: " + cam.zoom);
+                        }
                         if (keycode == Input.Keys.C) ui.toggleChatVisibility();
                         if (keycode == Input.Keys.U) ui.toggleAllVisibility();
                         if (keycode == Input.Keys.F) {
@@ -329,7 +273,12 @@ public class GameScreen implements Screen {
                             Values.logFPS = !Values.logFPS;
                             Gdx.app.log("Console", "FPS logging: " + (Values.logFPS ? "enabled" : "disabled"));
                         }
-                        if (keycode == Input.Keys.F2) ;
+                        if (keycode == Input.Keys.SPACE) {
+
+                        }
+                        if (keycode == Input.Keys.M) {
+
+                        }
                     } else {
                         if (keycode == Input.Keys.UP) {
                             //textField.setText(chatLabel.getPreviousMessage() != null ? chatLabel.getPreviousMessage().getContext() : ""); // TODO: <<<
@@ -343,26 +292,26 @@ public class GameScreen implements Screen {
     }
 
     public void handlePlayerControl(float delta) {
-        float speed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? 16 : 8;
+        float speed = 25;
+        float shiftSpeed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? speed * 2 : speed;
         if (ui.stage.getKeyboardFocus() == null) {
-            if (Gdx.input.isKeyPressed(Input.Keys.W)) cursory += speed * delta;
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) cursorx -= speed * delta;
-            if (Gdx.input.isKeyPressed(Input.Keys.S)) cursory -= speed * delta;
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) cursorx += speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.W)) cursorY += shiftSpeed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) cursorX -= shiftSpeed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.S)) cursorY -= shiftSpeed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) cursorX += shiftSpeed * delta;
         }
         float tpadX = ui.touchpad.getKnobPercentX();
         float tpadY = ui.touchpad.getKnobPercentY();
-        if (0.3 < tpadY && tpadY < 0.9) cursory += 8 * delta;
-        else if (tpadY > 0.9) cursory += 16 * delta;
+        float r = tpadX * tpadX + tpadY * tpadY;
 
-        if (-0.9 < tpadX && tpadX < -0.3) cursorx -= 8 * delta;
-        else if (tpadX < -0.9) cursorx -= 16 * delta;
-
-        if (-0.9 < tpadY && tpadY < -0.3) cursory -= 8 * delta;
-        else if (tpadY < -0.9) cursory -= 16 * delta;
-
-        if (0.3 < tpadX && tpadX < 0.9) cursorx += 8 * delta;
-        else if (tpadX > 0.9)
-            cursorx += 16 * delta; // TODO: Debug cursor speed and position. Make a special class/scene2d.ui widget for debug info
+        if (r < 0.9f * 0.9f) {
+            cursorX += speed * delta * tpadX;
+            cursorY += speed * delta * tpadY;
+        }
+        else if (r > 0.9f * 0.9f) {
+            cursorX += (speed * 2) * delta * tpadX;
+            cursorY += (speed * 2) * delta * tpadY;
+        }
+        // TODO: Debug cursor speed and position. Make a special class/scene2d.ui widget for debug info
     }
 }

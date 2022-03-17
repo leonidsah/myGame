@@ -17,7 +17,7 @@ public class DesktopLauncher {
 		//TexturePacker.process(settings,"android/assets/textures/raw", "android/assets/textures/textures", "pack");
 		// Setting up the LWJGL application
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.foregroundFPS = 120;
+		config.foregroundFPS = 0;
 		config.vSyncEnabled = false;
 		config.width = Values.SCREEN_WIDTH;
 		config.height = Values.SCREEN_HEIGHT;

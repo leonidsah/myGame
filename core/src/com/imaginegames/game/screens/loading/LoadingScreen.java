@@ -1,7 +1,6 @@
 package com.imaginegames.game.screens.loading;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -19,7 +18,7 @@ import com.imaginegames.game.screens.game.GameScreen;
 
 import static java.lang.Math.round;
 
-public class LoadingScreen implements Screen {
+public class LoadingScreen implements com.badlogic.gdx.Screen {
 
     private MilitaryMadnessMain game;
     private UI ui;
@@ -33,9 +32,7 @@ public class LoadingScreen implements Screen {
     public void show() {
         ui = new UI(game) {
             @Override
-            void external() {
-
-            }
+            void external() { }
         };
         ui.show();
 
@@ -103,8 +100,7 @@ public class LoadingScreen implements Screen {
             game.assets.finishLoading();
             if (!Values.stayOnLoadingScreen) {
                 dispose();
-                if (!Values.skipMainMenuScreen) game.setScreen(new MainMenuScreen(game));
-                else game.setScreen(new GameScreen(game));
+                game.setScreen(new MainMenuScreen(game));
             }
         } else ui.loadingTime += delta;
     }

@@ -3,7 +3,6 @@ package com.imaginegames.game.screens.mainmenu;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Version;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
@@ -16,9 +15,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.imaginegames.game.MilitaryMadnessMain;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.screens.game.GameScreen;
+import com.imaginegames.game.screens.worldmanager.WorldManagerScreen;
 import com.imaginegames.game.utils.SettingsPreferences;
 
-public class MainMenuScreen implements Screen {
+public class MainMenuScreen implements com.badlogic.gdx.Screen {
     private MilitaryMadnessMain game;
     private UI ui;
     private float stateTime;
@@ -26,7 +26,7 @@ public class MainMenuScreen implements Screen {
     private BitmapFont font, font_s, font_info, font_colored;
     private GlyphLayout version, fpsText, welcomeTitle;
     private Music music1;
-
+    private boolean performExit = false;
 
     public MainMenuScreen(MilitaryMadnessMain game) {
         this.game = game;
@@ -36,7 +36,7 @@ public class MainMenuScreen implements Screen {
     public void show() {
         ui = new UI(game) {
             @Override
-            void external() {
+            void externalShow() {
                 showDebugDialogButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
@@ -53,8 +53,8 @@ public class MainMenuScreen implements Screen {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
                         super.clicked(event, x, y);
-                        game.setScreen(new GameScreen(game));
                         dispose();
+                        game.setScreen(new WorldManagerScreen(game));
                     }
                 });
                 settingsButton.addListener(new ClickListener() {
@@ -70,14 +70,14 @@ public class MainMenuScreen implements Screen {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
                         super.clicked(event, x, y);
-                        exitGame();
+                        performExit = true;
                     }
                 });
                 debugModeCheckBox.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        Values.stagesDebug = debugModeCheckBox.isChecked();
-                        stage.setDebugAll(Values.stagesDebug);
+                        Values.debugMode = debugModeCheckBox.isChecked();
+                        stage.setDebugAll(Values.debugMode);
                         super.clicked(event, x, y);
                     }
                 });
@@ -105,7 +105,7 @@ public class MainMenuScreen implements Screen {
         // Music
         music1 = game.assets.get("music/Wind, winter and cold.mp3");
         music1.setVolume(0.05f);
-        music1.play();
+        if (Values.playMusic) music1.play();
     }
 
     @Override
@@ -114,7 +114,7 @@ public class MainMenuScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         ui.act(delta);
         ui.draw();
-        //exitGame();
+        if (performExit) disposeAndExit();
     }
 
     @Override
@@ -147,15 +147,11 @@ public class MainMenuScreen implements Screen {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
                 if (keycode == Input.Keys.D) {
-                    Values.stagesDebug = !Values.stagesDebug;
-                    ui.stage.setDebugAll(Values.stagesDebug);
+                    Values.debugMode = !Values.debugMode;
+                    ui.stage.setDebugAll(Values.debugMode);
                 }
                 if (keycode == Input.Keys.Q) {
-                    exitGame();
-                }
-                if (keycode == Input.Keys.ESCAPE) {
-                    game.setScreen(new GameScreen(game));
-                    dispose();
+                    performExit = true;
                 }
                 if (keycode == Input.Keys.F) {
                     Values.fullscreenMode = !Values.fullscreenMode;
@@ -168,12 +164,11 @@ public class MainMenuScreen implements Screen {
         });
     }
 
-    public void exitGame() {
-        System.out.println("lolshit");
-        SettingsPreferences.save();
+    public void disposeAndExit() {
+        game.setScreen(null);
         dispose();
-        Gdx.app.exit();
         game.assets.dispose();
-        System.out.println("lol!!");
+        SettingsPreferences.save();
+        Gdx.app.exit();
     }
 }

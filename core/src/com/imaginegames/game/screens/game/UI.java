@@ -24,7 +24,7 @@ import com.imaginegames.game.Values;
 import com.imaginegames.game.ui.chat.ChatLabel;
 import com.imaginegames.game.ui.chat.ChatLogger;
 
-class UI implements com.imaginegames.game.screens.UI {
+abstract class UI implements com.imaginegames.game.screens.UI {
     final MilitaryMadnessMain game;
     final ClickListener textFieldClickListener = new ClickListener();
     final String senderName = "leonidsah";
@@ -64,14 +64,14 @@ class UI implements com.imaginegames.game.screens.UI {
 
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        stage.setDebugAll(Values.stagesDebug);
+        stage.setDebugAll(Values.debugMode);
         rootTable = new Table();
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
         uiViewport = new ScreenViewport();
         stage.setViewport(uiViewport);
         // Actors initialization
-        chat = new ChatLabel(chatLabelStyle);
+        chat = new ChatLabel(chatLabelStyle, 10);
         chat.setWrap(true);
         chatButton = new ImageButton(chatButtonUp, chatButtonDown);
         inventoryButton = new ImageButton(inventoryButtonUp, inventoryButtonDown);
@@ -109,6 +109,7 @@ class UI implements com.imaginegames.game.screens.UI {
     public final void act(float delta) {
         stage.act(delta);
         if (Values.logFPS) fpsLogger.log();
+
     }
 
     @Override
@@ -134,6 +135,5 @@ class UI implements com.imaginegames.game.screens.UI {
         Gdx.input.setOnscreenKeyboardVisible(false);
     }
 
-    void externalShow() { }
-
+    abstract void externalShow();
 }

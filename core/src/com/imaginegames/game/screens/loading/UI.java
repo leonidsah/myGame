@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.imaginegames.game.MilitaryMadnessMain;
 import com.imaginegames.game.Values;
 
-class UI implements com.imaginegames.game.screens.UI {
+abstract class UI implements com.imaginegames.game.screens.UI {
     final MilitaryMadnessMain game;
     Skin skin;
     Stage stage;
@@ -41,7 +41,7 @@ class UI implements com.imaginegames.game.screens.UI {
         rootTable = new Table();
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
-        stage.setDebugAll(Values.stagesDebug);
+        stage.setDebugAll(Values.debugMode);
         screenViewport = new ScreenViewport();
         stage.setViewport(screenViewport);
         topTable = new Table();
@@ -92,7 +92,6 @@ class UI implements com.imaginegames.game.screens.UI {
                 rootTable.add(topTable).uniform().row();
                 rootTable.add(centerTable).expand().row();
                 rootTable.add(bottomTable).uniform().expandX().fill();
-                rootTable.bottom();
                 bottomTable.add(loadingTimeLabel).left().padLeft(5f).padBottom(5f).uniform();
                 bottomTable.add(percentageLabel).padBottom(5f).expandX();
                 bottomTable.add(versionLabel).right().padRight(5f).padBottom(5f).uniform().row();
@@ -125,6 +124,6 @@ class UI implements com.imaginegames.game.screens.UI {
         stage.getViewport().update(width, height, true);
     }
 
-    void external() {}
+    abstract void external();
 }
 

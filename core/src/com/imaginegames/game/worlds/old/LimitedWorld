@@ -1,13 +1,13 @@
-package com.imaginegames.game.worlds;
+package com.imaginegames.game.worlds.old;
 
-public class World {
+public class LimitedWorld {
     private int width;
     private int height;
     private int[][] cells;
 
     private long seed;
 
-    public World(long seed) {
+    public LimitedWorld(long seed) {
         this.seed = seed;
     }
 
@@ -15,7 +15,7 @@ public class World {
         return seed;
     }
 
-    public World(int[][] cells) {
+    public LimitedWorld(int[][] cells) {
         this.cells = cells;
         this.height = cells.length;
         this.width = cells[0].length;

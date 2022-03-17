@@ -13,7 +13,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.imaginegames.game.MilitaryMadnessMain;
 import com.imaginegames.game.Values;
 
-class UI implements com.imaginegames.game.screens.UI {
+abstract class UI implements com.imaginegames.game.screens.UI {
     final MilitaryMadnessMain game;
     Skin skin;
     Stage stage;
@@ -31,7 +31,7 @@ class UI implements com.imaginegames.game.screens.UI {
     public final void show() {
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        stage.setDebugAll(Values.stagesDebug);
+        stage.setDebugAll(Values.debugMode);
         rootTable = new Table();
         stage.addActor(rootTable);
         rootTable.setFillParent(true);
@@ -46,7 +46,7 @@ class UI implements com.imaginegames.game.screens.UI {
         settingsButton = new TextButton("Settings", skin);
         exitButton = new TextButton("Exit", skin);
         debugModeCheckBox = new CheckBox("Debug mode", skin);
-        debugModeCheckBox.setChecked(Values.stagesDebug);
+        debugModeCheckBox.setChecked(Values.debugMode);
         fullscreenModeCheckbox = new CheckBox("Fullscreen", skin);
         logFPSCheckBox = new CheckBox("Log FPS", skin);
         logFPSCheckBox.setChecked(Values.logFPS);
@@ -60,7 +60,7 @@ class UI implements com.imaginegames.game.screens.UI {
         debugDialog.button("Got it");
         debugDialog.setColor(Color.GRAY);
         // Adding listeners to scene2d.ui actors
-        external();
+        externalShow();
     }
 
     @Override
@@ -122,5 +122,5 @@ class UI implements com.imaginegames.game.screens.UI {
         }
     }
 
-    void external() {}
+    abstract void externalShow();
 }
