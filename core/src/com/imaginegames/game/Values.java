@@ -2,8 +2,13 @@ package com.imaginegames.game;
 
 public final class Values {
     // Version format by changes significance: major/minor/days of developing
-    public static final String VERSION = "0.2.18-fn"; // Next stage 3: interpolation, scene2d ui actions :: (29.10.21)
-    public static final String WELCOME_TITLE = "(Pure fog version)";
+    public static final String VERSION = "0.2.19"; // Next stage 3: interpolation, scene2d ui actions :: (29.10.21)
+    /* Development and frustrations history:
+    v.v.v           DD.MM.YY
+    0.2.19          20.03.22
+    0.2.18-fn       29.10.21
+    ... past versions ... */
+    public static final String WELCOME_TITLE = "";
     public static final int SCREEN_WIDTH = 1280;
     public static final int SCREEN_HEIGHT = 720;
     public static final String SKIN_PATH = "skins/commodore-65/uiskin.json";

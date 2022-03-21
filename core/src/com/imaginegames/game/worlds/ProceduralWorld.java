@@ -13,12 +13,10 @@ public class ProceduralWorld implements Serializable {
     private final byte chunkSize;
 
     /**
-     * worldName - how to call this world. In essence, needs just to differentiate worlds with the
-     *      same seed, but different changes
-     * worldSeed - necessary to know how to generate world, while player explores it
-     * worldDirectory - necessary to know where to save newly generated chunks and modified old ones;
-     *      also needed to know, where player spawns at beginning of another game and where to
-     *      draw chunks
+     * worldName - needs to distinguish worlds with the same seed, but different changes
+     * worldSeed - needs to know how to procedurally expand the world, when player explores it
+     * worldDirectory - needs to know where to store data about the world, (like chunks state,
+     *      player position, and etc.)
      * */
     public ProceduralWorld(String worldName, long worldSeed, byte chunkSize) {
         this.name = worldName;

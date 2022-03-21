@@ -22,10 +22,10 @@ public class Command {
         execute();
     };
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
-    public boolean isUsingArgs() {
+    public final boolean isUsingArgs() {
         return useArgs;
     }
 }

@@ -8,7 +8,7 @@ import com.imaginegames.game.screens.loading.LoadingScreen;
 import com.imaginegames.game.utils.SettingsPreferences;
 
 public class MilitaryMadnessMain extends Game {
-    public AssetManager assets; // Shouldn't be static, as mentioned on AssetManager page on GitHub wiki
+    public AssetManager assets; // Shouldn't be static, as mentioned on AssetManager page on libGDX wiki
 
     @Override
     public void create() {

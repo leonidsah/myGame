@@ -11,14 +11,15 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class ChunkManager {
-    FileHandle worldDir;
-    long seed;
-    byte chunkSize;
-    byte chunkFieldWidth, chunkFieldHeight;
-    Chunk[][] chunkField;
-    HashMap<IntPair, Chunk> markMap = new HashMap<>();
+    private Chunk[][] chunkField;
+    private HashMap<IntPair, Chunk> chunksToSave = new HashMap<>();
+    private byte chunkFieldWidth, chunkFieldHeight;
+    private FileHandle worldDir;
+    private long seed;
+    private byte chunkSize;
     int value = 0;
-
+    int chunkFieldX, chunkFieldY;
+    int centerChunkX, centerChunkY;
 
     public ChunkManager(ProceduralWorld world, byte chunkFieldWidth, byte chunkFieldHeight) {
         this.chunkFieldWidth = chunkFieldWidth;
@@ -28,42 +29,64 @@ public class ChunkManager {
         seed = world.getSeed();
         chunkSize = world.getChunkSize();
     }
-    
-    public Chunk[][] getChunkField() { return chunkField; }
 
     /** ChunkField coordinates are the coordinates of the it's center chunk */
     public void updateChunkField(int chunkFieldX, int chunkFieldY) {
+        this.chunkFieldX = chunkFieldX;
+        this.chunkFieldY = chunkFieldY;
+        centerChunkX = chunkFieldX;
+        centerChunkY = chunkFieldY;
         chunkFieldX -= chunkFieldWidth / 2;
         chunkFieldY -= chunkFieldHeight / 2;
+
         int i, j;
         for (i = 0; i < chunkFieldWidth; i++)
             for (j = 0; j < chunkFieldHeight; j++) {
                 chunkField[i][j] = getChunk(chunkFieldX + i, chunkFieldY + j);
             }
     }
+
+    public void setCell(float x, float y, int value) {
+        int chunkX, chunkY, cellX, cellY;
+        int leftBottomChunkX, leftBottomChunkY, rightTopX, rightTopY;
+        leftBottomChunkX = centerChunkX - chunkFieldWidth / 2;
+        leftBottomChunkY = centerChunkY - chunkFieldHeight / 2;
+        rightTopX = centerChunkX + (chunkFieldWidth - chunkFieldWidth / 2) - 1;
+        rightTopY = centerChunkY + (chunkFieldHeight - chunkFieldHeight / 2) - 1;
+        chunkX = Chunk.getChunkCoord(x, chunkSize);
+        chunkY = Chunk.getChunkCoord(y, chunkSize);
+
+        if (chunkX < leftBottomChunkX || chunkX > rightTopX) return;
+        if (chunkY < leftBottomChunkY || chunkY > rightTopY) return;
+
+        cellX = Chunk.getCellCoord(x, chunkSize);
+        cellY = Chunk.getCellCoord(y, chunkSize);
+
+        chunkField[chunkX - leftBottomChunkX][chunkY - leftBottomChunkY].setCell(cellX, cellY, value);
+        markToSave(chunkX, chunkY, chunkField[chunkX - leftBottomChunkX][chunkY - leftBottomChunkY]);
+    }
     
-    Chunk getChunk(int chunkX, int chunkY) {
+    private Chunk getChunk(int chunkX, int chunkY) {
         Chunk chunk;
-        if (chunkX == 0 && chunkY == 0) {
+        //System.out.println("isModified: " + isModified(chunkX, chunkY));
+        if (isModified(chunkX, chunkY)) {
+            //System.out.println("chunkX = " + chunkX + "    chunkY = " + chunkY + " isModified: " + isModified(chunkX, chunkY));
+            return chunksToSave.get(new IntPair(chunkX, chunkY));
+        }
+        else if (chunkX == 0 && chunkY == 0) {
             chunk = new Chunk(chunkSize);
             int[][] cells = new int[chunkSize][chunkSize];
             for (int i = 0; i < chunkSize; i++)
                 for (int j = 0; j < chunkSize; j++) {
-                    value = 200;
+                    value = 50;
                     chunk.setCell(i, j, value);
                 }
-
         }
         else {
-            chunk = new Chunk(chunkSize);
-            int[][] cells = new int[chunkSize][chunkSize];
-            for (int i = 0; i < chunkSize; i++)
-                for (int j = 0; j < chunkSize; j++) {
-                    value = (value + 2) % 256;
-                    chunk.setCell(i, j, value);
-                }
+            // Do not use setCell method here, it leads to buggy recursion things
+            chunk = ChunkGenerator.generateChunk2(chunkX, chunkY, seed, chunkSize);
         }
-        /*if (isSaved(chunkX, chunkY)) {
+        /*else if (isSaved(chunkX, chunkY)) {
             chunk = loadChunk(chunkX, chunkY);
         }
         else {
@@ -73,51 +96,44 @@ public class ChunkManager {
         return chunk;
     }
 
-    public void setCell(int x, int y, int value) {
-        int chunkX, chunkY, cellX, cellY;
-        x -= (x >= 0 ? 0 : chunkSize);
-        y -= (y >= 0 ? 0 : chunkSize);
-        chunkX = x / chunkSize;
-        chunkY = y / chunkSize;
-        cellX = x % chunkSize;
-        cellY = y % chunkSize;
-        
-        chunkField[chunkX][chunkY].setCell(cellX, cellY, value);
-        markToSave(chunkX, chunkY, chunkField[chunkX][chunkY]);
-    }
-
-    void markToSave(int chunkX, int chunkY, Chunk chunk) {
+    private void markToSave(int chunkX, int chunkY, Chunk chunk) {
         IntPair coords = new IntPair(chunkX, chunkY);
-        if (markMap.containsKey(coords)) markMap.remove(coords);
-        else markMap.put(coords, chunk);
-        markMap.put(coords, chunk);
+        if (chunksToSave.containsKey(coords)) chunksToSave.remove(coords);
+        else chunksToSave.put(coords, chunk);
+        chunksToSave.put(coords, chunk);
     }
     
-    boolean isSaved(int chunkX, int chunkY) {
+    private boolean isSaved(int chunkX, int chunkY) {
         return worldDir.child(chunkX + "_" + chunkY).exists();
     }
+
+    private boolean isModified(int chunkX, int chunkY) {
+        return chunksToSave.containsKey(new IntPair(chunkX, chunkY));
+    }
     
-    void saveAll() {
-        Set<IntPair> keySet = markMap.keySet();
+    private void saveChunks() {
+        Set<IntPair> keySet = chunksToSave.keySet();
         for (IntPair chunkCoords: keySet) {
             FileHandle dataFile = worldDir.child(chunkCoords.getX() + "_" + chunkCoords.getY());
             try (ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(dataFile.write(false)))) {
-                oos.writeObject(markMap.get(chunkCoords));
+                oos.writeObject(chunksToSave.get(chunkCoords));
             } catch (Exception e) {
-                System.err.println("An exception has occurred has occurred during write: " + e);
+                System.err.println("An exception has occurred has occurred during writing: " + e);
             }
         }
     }
-    
-    Chunk loadChunk(int chunkX, int chunkY) {
+
+    private Chunk loadChunk(int chunkX, int chunkY) {
         FileHandle dataFile = worldDir.child(chunkX + "_" + chunkY);
         Chunk chunk = null;
         try (ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(dataFile.read()))) {
             chunk = (Chunk) ois.readObject();
-        } 
-        catch (Exception e) { System.err.println("An exception has occurred during read: " + e); }
+        }
+        catch (Exception e) { System.err.println("An exception has occurred during reading: " + e); }
         finally { return chunk; }
     }
+
+    public Chunk[][] getChunkField() { return chunkField; }
 
     public byte getChunkSize() {
         return chunkSize;

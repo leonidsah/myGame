@@ -27,6 +27,10 @@ public class WorldManagerScreen implements com.badlogic.gdx.Screen {
 
     @Override
     public void show() {
+        /*int a = -8;
+        for (int i = 0; i < 9; i++) {
+            System.out.println((a + i) + "% 8 = " + (a + i) % 8);
+        }*/
         ui = new UI(game) {
             @Override
             void externalShow() {

@@ -24,7 +24,7 @@ import com.imaginegames.game.Values;
 import com.imaginegames.game.ui.chat.Command;
 import com.imaginegames.game.ui.chat.messages.TextMessage;
 import com.imaginegames.game.worlds.Chunk;
-import com.imaginegames.game.worlds.ChunkFieldRenderer;
+import com.imaginegames.game.worlds.ChunkRenderer;
 import com.imaginegames.game.worlds.ChunkManager;
 import com.imaginegames.game.worlds.ProceduralWorld;
 
@@ -46,7 +46,7 @@ public class GameScreen implements com.badlogic.gdx.Screen {
 
     private ProceduralWorld world;
     private ChunkManager chunkManager;
-    private ChunkFieldRenderer chunkFieldRenderer;
+    private ChunkRenderer chunkRenderer;
     private Chunk[][] chunkField;
     byte chunksFieldWidth, chunksFieldHeight, chunkSize;
     private float cursorX, cursorY;
@@ -126,6 +126,12 @@ public class GameScreen implements com.badlogic.gdx.Screen {
                         } else chat.handleConsoleMessage("[RED]Wrong arguments. Usage: /cam.zoom (-zoomBy)[]");
                     }
                 });
+                chat.getCommandProcessor().addCommand(new Command("javaHeap", false) {
+                    @Override
+                    public void execute() {
+                        chat.handleConsoleMessage("[#4a6eb6]jheap: " + (Gdx.app.getJavaHeap() / (1024 * 1024)) + "[]");
+                    }
+                });
             }
         };
         ui.show();
@@ -161,7 +167,7 @@ public class GameScreen implements com.badlogic.gdx.Screen {
         chunksFieldHeight = chunkManager.getChunkFieldHeight();
         chunkSize = chunkManager.getChunkSize();
 
-        chunkFieldRenderer = new ChunkFieldRenderer(sb, chunksFieldWidth, chunksFieldHeight, chunkSize);
+        chunkRenderer = new ChunkRenderer(sb, chunksFieldWidth, chunksFieldHeight, chunkSize);
 
         chunkManager.updateChunkField(0, 0);
         chunkField = chunkManager.getChunkField();
@@ -183,14 +189,16 @@ public class GameScreen implements com.badlogic.gdx.Screen {
         time += delta;
         if (time - lastTime >= 0.8f) {
             lastTime = time;
-            ui.chat.handleConsoleMessage("x: " + cursorX + "    y: " + cursorY);
+            ui.chat.handleConsoleMessage("cellX: " + Chunk.getCellCoord(cursorX, chunkSize) + "    x: " + cursorX);
         }
 
-        //cam.translate(cursorX - cam.position.x, cursorY - cam.position.y);
+        cam.translate(cursorX - cam.position.x, cursorY - cam.position.y);
         cam.update();
         sb.setProjectionMatrix(cam.combined);
 
-        chunkFieldRenderer.render(chunkField, cursorX, cursorY);
+        chunkManager.updateChunkField(Chunk.getChunkCoord(cursorX, chunkSize), Chunk.getChunkCoord(cursorY, chunkSize));
+        chunkField = chunkManager.getChunkField();
+        chunkRenderer.render(chunkField, cursorX, cursorY);
 
         sb.begin();
         float cursorWidth = 1, cursorHeight = 1;
@@ -238,51 +246,50 @@ public class GameScreen implements com.badlogic.gdx.Screen {
                     Gdx.input.setOnscreenKeyboardVisible(false);
                 }
                 // Desktop control keys
-                if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
-                    if (keycode == Input.Keys.ESCAPE) {
-                        if (ui.stage.getKeyboardFocus() != null) ui.stage.setKeyboardFocus(null);
-                        else {
-                            game.setScreen(new MainMenuScreen(game));
-                        }
+                if (Gdx.app.getType() != Application.ApplicationType.Desktop) return super.keyDown(event, keycode);
+                if (keycode == Input.Keys.ESCAPE) {
+                    if (ui.stage.getKeyboardFocus() != null) ui.stage.setKeyboardFocus(null);
+                    else {
+                        game.setScreen(new MainMenuScreen(game));
                     }
-                    if (ui.stage.getKeyboardFocus() == null) {
-                        if (keycode == Input.Keys.UP) cam.translate(0f, 1f * cam.zoom);
-                        if (keycode == Input.Keys.DOWN) cam.translate(0f, -1f * cam.zoom);
-                        if (keycode == Input.Keys.LEFT) cam.translate(-1f * cam.zoom, 0f);
-                        if (keycode == Input.Keys.RIGHT) cam.translate(1f * cam.zoom, 0f);
-                        if (keycode == Input.Keys.UP || keycode == Input.Keys.DOWN || keycode == Input.Keys.LEFT || keycode == Input.Keys.RIGHT) {
-                            ui.chat.handleConsoleMessage("Current camera's position: " + cam.position.x + " " + cam.position.y);
-                        }
-                        if ((keycode == Input.Keys.EQUALS || keycode == Input.Keys.RIGHT_BRACKET) && cam.zoom > 0.1f) {
-                            cam.zoom -= 0.1f;
-                            ui.chat.handleConsoleMessage("Current camera's zoom: " + cam.zoom);
-                        }
-                        if ((keycode == Input.Keys.MINUS || keycode == Input.Keys.LEFT_BRACKET) && cam.zoom < 8.0f) {
-                            cam.zoom += 0.1f;
-                            ui.chat.handleConsoleMessage("Current camera's zoom: " + cam.zoom);
-                        }
-                        if (keycode == Input.Keys.C) ui.toggleChatVisibility();
-                        if (keycode == Input.Keys.U) ui.toggleAllVisibility();
-                        if (keycode == Input.Keys.F) {
-                            Values.fullscreenMode = !Values.fullscreenMode;
-                            if (Values.fullscreenMode)
-                                Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-                            else Gdx.graphics.setWindowedMode(1280, 720);
-                        }
-                        if (keycode == Input.Keys.F1) {
-                            Values.logFPS = !Values.logFPS;
-                            Gdx.app.log("Console", "FPS logging: " + (Values.logFPS ? "enabled" : "disabled"));
-                        }
-                        if (keycode == Input.Keys.SPACE) {
+                }
+                if (ui.stage.getKeyboardFocus() == null) {
+                    if (keycode == Input.Keys.UP) cam.translate(0f, 1f * cam.zoom);
+                    if (keycode == Input.Keys.DOWN) cam.translate(0f, -1f * cam.zoom);
+                    if (keycode == Input.Keys.LEFT) cam.translate(-1f * cam.zoom, 0f);
+                    if (keycode == Input.Keys.RIGHT) cam.translate(1f * cam.zoom, 0f);
+                    if (keycode == Input.Keys.UP || keycode == Input.Keys.DOWN || keycode == Input.Keys.LEFT || keycode == Input.Keys.RIGHT) {
+                        ui.chat.handleConsoleMessage("Current camera's position: " + cam.position.x + " " + cam.position.y);
+                    }
+                    if ((keycode == Input.Keys.EQUALS || keycode == Input.Keys.RIGHT_BRACKET) && cam.zoom > 0.1f) {
+                        cam.zoom -= 0.1f;
+                        ui.chat.handleConsoleMessage("Current camera's zoom: " + cam.zoom);
+                    }
+                    if ((keycode == Input.Keys.MINUS || keycode == Input.Keys.LEFT_BRACKET) && cam.zoom < 8.0f) {
+                        cam.zoom += 0.1f;
+                        ui.chat.handleConsoleMessage("Current camera's zoom: " + cam.zoom);
+                    }
+                    if (keycode == Input.Keys.C) ui.toggleChatVisibility();
+                    if (keycode == Input.Keys.U) ui.toggleAllVisibility();
+                    if (keycode == Input.Keys.F) {
+                        Values.fullscreenMode = !Values.fullscreenMode;
+                        if (Values.fullscreenMode)
+                            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+                        else Gdx.graphics.setWindowedMode(1280, 720);
+                    }
+                    if (keycode == Input.Keys.F1) {
+                        Values.logFPS = !Values.logFPS;
+                        Gdx.app.log("Console", "FPS logging: " + (Values.logFPS ? "enabled" : "disabled"));
+                    }
+                    if (keycode == Input.Keys.SPACE) {
+                        chunkManager.setCell(cursorX, cursorY, 250);
+                    }
+                    if (keycode == Input.Keys.M) {
 
-                        }
-                        if (keycode == Input.Keys.M) {
-
-                        }
-                    } else {
-                        if (keycode == Input.Keys.UP) {
-                            //textField.setText(chatLabel.getPreviousMessage() != null ? chatLabel.getPreviousMessage().getContext() : ""); // TODO: <<<
-                        }
+                    }
+                } else {
+                    if (keycode == Input.Keys.UP) {
+                        //textField.setText(chatLabel.getPreviousMessage() != null ? chatLabel.getPreviousMessage().getContext() : ""); // TODO: <<<
                     }
                 }
                 return super.keyDown(event, keycode);
@@ -293,7 +300,14 @@ public class GameScreen implements com.badlogic.gdx.Screen {
 
     public void handlePlayerControl(float delta) {
         float speed = 25;
-        float shiftSpeed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? speed * 2 : speed;
+        float shiftSpeed;
+        if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            shiftSpeed = speed * 2;
+        }
+        else if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+            shiftSpeed = speed / 4;
+        }
+        else shiftSpeed = speed;
         if (ui.stage.getKeyboardFocus() == null) {
             if (Gdx.input.isKeyPressed(Input.Keys.W)) cursorY += shiftSpeed * delta;
             if (Gdx.input.isKeyPressed(Input.Keys.A)) cursorX -= shiftSpeed * delta;
