@@ -44,6 +44,7 @@ abstract class UI implements com.imaginegames.game.screens.UI {
     TextureAtlas textureAtlas;
     Sprite background;
 
+
     UI (MilitaryMadnessMain game) { this.game = game; }
 
     @Override

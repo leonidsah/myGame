@@ -2,21 +2,26 @@ package com.imaginegames.game.screens.worldmanager;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Container;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.imaginegames.game.MilitaryMadnessMain;
 import com.imaginegames.game.Values;
+import com.imaginegames.game.ui.DebugBox;
 import com.imaginegames.game.ui.chat.ChatLabel;
 
 abstract class UI implements com.imaginegames.game.screens.UI {
@@ -35,6 +40,7 @@ abstract class UI implements com.imaginegames.game.screens.UI {
     List<FileHandle> worldsList;
     ScrollPane worldScrollableList;
     Stack stack;
+    DebugBox debugBox;
 
     UI (MilitaryMadnessMain game) {
         this.game = game;
@@ -52,6 +58,7 @@ abstract class UI implements com.imaginegames.game.screens.UI {
         screenViewport = new ScreenViewport();
         stage.setViewport(screenViewport);
 
+        // Initializing and setting up widgets
         topTable = new Table();
         centerTable = new Table();
         bottomTable = new Table();
@@ -75,6 +82,7 @@ abstract class UI implements com.imaginegames.game.screens.UI {
         textFieldsTable.add(worldNameTextField).expandX().fill().padBottom(10f).row();
         textFieldsTable.add(seedTextField).expandX().fill();
         stack = new Stack(textFieldsTable, worldScrollableList);
+        debugBox = new DebugBox(skin);
 
         rootTable.add(topTable).expand().fill().uniform().row();
         rootTable.add(centerTable).expand().fill().uniform().row();
@@ -85,7 +93,8 @@ abstract class UI implements com.imaginegames.game.screens.UI {
         bottomTable.add(proceedCreateButton).uniform().fill();
         bottomTable.add(proceedLoadButton).uniform().fill();
         topTable.add(logChat).expand().fill();
-        centerTable.add(stack).expand().fill();
+        centerTable.add(stack).expand().fill().row();
+        //centerTable.add(debugBox);
 
         worldScrollableList.setVisible(false);
         logChat.setVisible(false);
@@ -93,8 +102,8 @@ abstract class UI implements com.imaginegames.game.screens.UI {
         proceedCreateButton.setVisible(false);
         proceedLoadButton.setVisible(false);
 
+        // Adding listeners to scene2d.ui actors
         externalShow();
-
         toggleCreateSectionButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {

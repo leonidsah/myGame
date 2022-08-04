@@ -1,0 +1,62 @@
+
+pack.png
+size: 2048, 1024
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+background1
+  rotate: false
+  xy: 2, 260
+  size: 1280, 720
+  orig: 1280, 720
+  offset: 0, 0
+  index: -1
+chatButtonDown
+  rotate: false
+  xy: 1284, 852
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+chatButtonUp
+  rotate: false
+  xy: 260, 130
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+cupOfTea
+  rotate: false
+  xy: 2, 2
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+inventoryButtonDown
+  rotate: false
+  xy: 1284, 722
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+inventoryButtonUp
+  rotate: false
+  xy: 1414, 852
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+menuButtonDown
+  rotate: false
+  xy: 390, 130
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+menuButtonUp
+  rotate: false
+  xy: 1284, 592
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1

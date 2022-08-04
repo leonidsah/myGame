@@ -1,0 +1,15 @@
+6 Oct 2021:
+GameScreen:
+/* It's a bad idea to directly call disposeAndExit() method, because, as it turned out,
+* libgdx doesn't care about doing game.setScreen(null), so libgdx tries to perform
+* render again, but now on the screen with disposed assets, which leads OpenGL to
+* throw an exception.
+* So there are to solutions:
+* 1) Do not call disposeAndExit() method directly, but set a boolean variable (performExit = true)
+* and check whether it's needed to perform exit at the end of the render() method
+* 2) Use game.setScreen(null) before calling disposeAndExit() directly */
+
+9 Oct 2021:
+30s tests, average ChunkManager.load(...):
+default: 13.616485 ms
+weird but seems to be fast modulus: 14.476595 ms
