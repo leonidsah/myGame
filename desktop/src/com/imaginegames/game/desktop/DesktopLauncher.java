@@ -4,7 +4,7 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 import com.imaginegames.game.Values;
 
 public class DesktopLauncher {
@@ -22,8 +22,8 @@ public class DesktopLauncher {
 		config.width = Values.SCREEN_WIDTH;
 		config.height = Values.SCREEN_HEIGHT;
 		config.fullscreen = Values.fullscreenMode;
-		config.title = "Military Madness" + " " + Values.VERSION + " | " + Values.WELCOME_TITLE;
+		config.title = "myGame" + " " + Values.VERSION + " | " + Values.WELCOME_TITLE;
 		config.addIcon("desktop-icon.png", Files.FileType.Internal);
-		new LwjglApplication(new MilitaryMadnessMain(), config);
+		new LwjglApplication(new MyGame(), config);
 	}
 }

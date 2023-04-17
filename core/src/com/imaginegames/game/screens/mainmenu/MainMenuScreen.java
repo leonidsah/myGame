@@ -13,13 +13,13 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.screens.game.GameScreen;
 import com.imaginegames.game.utils.SettingsPreferences;
 
 public class MainMenuScreen implements Screen {
-    private MilitaryMadnessMain game;
+    private MyGame game;
     private UI ui;
     private float stateTime;
     private Animation<?>[] rolls;
@@ -28,7 +28,7 @@ public class MainMenuScreen implements Screen {
     private Music music1;
 
 
-    public MainMenuScreen(MilitaryMadnessMain game) {
+    public MainMenuScreen(MyGame game) {
         this.game = game;
     }
 

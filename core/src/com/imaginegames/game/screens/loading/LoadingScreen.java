@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.screens.mainmenu.MainMenuScreen;
 import com.imaginegames.game.screens.game.GameScreen;
@@ -21,11 +21,11 @@ import static java.lang.Math.round;
 
 public class LoadingScreen implements Screen {
 
-    private MilitaryMadnessMain game;
+    private MyGame game;
     private UI ui;
     private String[] assetsArray;
 
-    public LoadingScreen(MilitaryMadnessMain game) {
+    public LoadingScreen(MyGame game) {
         this.game = game;
     }
 
@@ -55,7 +55,7 @@ public class LoadingScreen implements Screen {
                         // Tiled maps
                         "tiledMaps/tiledMap.tmx",
                         // Fonts
-                        "fonts/luxi.fnt"
+                        "fonts/arial.fnt"
                 };
 
         // Loading assets (including assets for loading screen)

@@ -4,11 +4,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 
 public class Explosion {
 
-	private MilitaryMadnessMain game;
+	private final MyGame game;
 	private static final int PWIDTH = 256;
 	private static final int PHEIGHT = 256;
 	public static float WIDTH;
@@ -22,7 +22,7 @@ public class Explosion {
 	
 	public boolean remove = false;
 	
-	public Explosion (MilitaryMadnessMain game, float firstRectX, float secondRectX, float firstRectWIDTH, float secondRectWIDTH, float firstRectY, float secondRectY, float firstRectHEIGHT, float secondRectHEIGHT, float EXPLOSION_SIZE) {
+	public Explosion (MyGame game, float firstRectX, float secondRectX, float firstRectWIDTH, float secondRectWIDTH, float firstRectY, float secondRectY, float firstRectHEIGHT, float secondRectHEIGHT, float EXPLOSION_SIZE) {
 		this.game = game;
 		this.x = Math.min(firstRectX, secondRectX) + (firstRectWIDTH + secondRectWIDTH - WIDTH) / 2;
 		this.y = Math.min(firstRectY, secondRectY) + (firstRectHEIGHT + secondRectHEIGHT - HEIGHT) / 2;

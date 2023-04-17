@@ -19,7 +19,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 import com.imaginegames.game.screens.mainmenu.MainMenuScreen;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.ui.chat.Command;
@@ -33,7 +33,7 @@ import com.imaginegames.game.worlds.WorldRenderer;
 import java.util.ArrayList;
 
 public class GameScreen implements Screen {
-    private final MilitaryMadnessMain game;
+    private final MyGame game;
     private final SpriteBatch sb = new SpriteBatch();
     private UI ui;
     private OrthographicCamera cam;
@@ -54,14 +54,14 @@ public class GameScreen implements Screen {
     private int fieldTextureSize;
     private long time = 0;
 
-    public GameScreen(MilitaryMadnessMain game) {
+    public GameScreen(MyGame game) {
         this.game = game;
     }
 
     private void initAssets() {
         tiledMap = game.assets.get("tiledMaps/tiledMap.tmx");
         // Setting up a separate bitmap font with {color markup = enabled} for labels
-        font = game.assets.get("fonts/luxi.fnt", BitmapFont.class);
+        font = game.assets.get("fonts/arial.fnt", BitmapFont.class);
         font.getData().setScale(1 / 32f);
     }
 

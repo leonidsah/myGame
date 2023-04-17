@@ -14,11 +14,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 import com.imaginegames.game.Values;
 
 class UI implements com.imaginegames.game.screens.UI {
-    final MilitaryMadnessMain game;
+    final MyGame game;
     Skin skin;
     Stage stage;
     ScreenViewport screenViewport;
@@ -33,7 +33,7 @@ class UI implements com.imaginegames.game.screens.UI {
     float progress = 0f;
     float loadingTime;
     boolean setUpProgressBar = true, setUpLogo = true;
-    UI (MilitaryMadnessMain game) { this.game = game; }
+    UI (MyGame game) { this.game = game; }
 
     @Override
     public final void show() {

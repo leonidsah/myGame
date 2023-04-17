@@ -19,13 +19,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.imaginegames.game.MilitaryMadnessMain;
+import com.imaginegames.game.MyGame;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.ui.chat.ChatLabel;
 import com.imaginegames.game.ui.chat.ChatLogger;
 
 class UI implements com.imaginegames.game.screens.UI {
-    final MilitaryMadnessMain game;
+    final MyGame game;
     final ClickListener textFieldClickListener = new ClickListener();
     final String senderName = "leonidsah";
     boolean showUI = true, showChat = true;
@@ -44,7 +44,7 @@ class UI implements com.imaginegames.game.screens.UI {
     TextureAtlas textureAtlas;
     Sprite background;
 
-    UI (MilitaryMadnessMain game) { this.game = game; }
+    UI (MyGame game) { this.game = game; }
 
     @Override
     public final void show() {
