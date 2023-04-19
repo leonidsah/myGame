@@ -6,15 +6,18 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.imaginegames.game.MyGame;
+import com.imaginegames.game.MyGameMain;
 import com.imaginegames.game.Values;
 
-class UI implements com.imaginegames.game.screens.UI {
-    final MyGame game;
+abstract class UI implements com.imaginegames.game.screens.UI {
+    final MyGameMain game;
     Skin skin;
     Stage stage;
     ScreenViewport screenViewport;
@@ -25,13 +28,13 @@ class UI implements com.imaginegames.game.screens.UI {
     CheckBox debugModeCheckBox, fullscreenModeCheckbox, logFPSCheckBox;
     float textButtonScale = Values.mainMenuScreenUIScale;
     float checkBoxScale = Values.mainMenuScreenUIScale / 2.0f;
-    UI (MyGame game) { this.game = game; }
+    UI (MyGameMain game) { this.game = game; }
 
     @Override
     public final void show() {
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        stage.setDebugAll(Values.stagesDebug);
+        stage.setDebugAll(Values.debugMode);
         rootTable = new Table();
         stage.addActor(rootTable);
         rootTable.setFillParent(true);
@@ -46,7 +49,7 @@ class UI implements com.imaginegames.game.screens.UI {
         settingsButton = new TextButton("Settings", skin);
         exitButton = new TextButton("Exit", skin);
         debugModeCheckBox = new CheckBox("Debug mode", skin);
-        debugModeCheckBox.setChecked(Values.stagesDebug);
+        debugModeCheckBox.setChecked(Values.debugMode);
         fullscreenModeCheckbox = new CheckBox("Fullscreen", skin);
         logFPSCheckBox = new CheckBox("Log FPS", skin);
         logFPSCheckBox.setChecked(Values.logFPS);
@@ -60,7 +63,7 @@ class UI implements com.imaginegames.game.screens.UI {
         debugDialog.button("Got it");
         debugDialog.setColor(Color.GRAY);
         // Adding listeners to scene2d.ui actors
-        external();
+        externalShow();
     }
 
     @Override
@@ -122,5 +125,5 @@ class UI implements com.imaginegames.game.screens.UI {
         }
     }
 
-    void external() {}
+    abstract void externalShow();
 }

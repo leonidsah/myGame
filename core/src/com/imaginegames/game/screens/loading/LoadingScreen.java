@@ -1,7 +1,6 @@
 package com.imaginegames.game.screens.loading;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -12,20 +11,20 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.imaginegames.game.MyGame;
+import com.imaginegames.game.MyGameMain;
 import com.imaginegames.game.Values;
 import com.imaginegames.game.screens.mainmenu.MainMenuScreen;
 import com.imaginegames.game.screens.game.GameScreen;
 
 import static java.lang.Math.round;
 
-public class LoadingScreen implements Screen {
+public class LoadingScreen implements com.badlogic.gdx.Screen {
 
-    private MyGame game;
+    private MyGameMain game;
     private UI ui;
     private String[] assetsArray;
 
-    public LoadingScreen(MyGame game) {
+    public LoadingScreen(MyGameMain game) {
         this.game = game;
     }
 
@@ -33,9 +32,7 @@ public class LoadingScreen implements Screen {
     public void show() {
         ui = new UI(game) {
             @Override
-            void external() {
-
-            }
+            void external() { }
         };
         ui.show();
 
@@ -55,7 +52,7 @@ public class LoadingScreen implements Screen {
                         // Tiled maps
                         "tiledMaps/tiledMap.tmx",
                         // Fonts
-                        "fonts/arial.fnt"
+                        "fonts/play.fnt"
                 };
 
         // Loading assets (including assets for loading screen)
@@ -103,8 +100,7 @@ public class LoadingScreen implements Screen {
             game.assets.finishLoading();
             if (!Values.stayOnLoadingScreen) {
                 dispose();
-                if (!Values.skipMainMenuScreen) game.setScreen(new MainMenuScreen(game));
-                else game.setScreen(new GameScreen(game));
+                game.setScreen(new MainMenuScreen(game));
             }
         } else ui.loadingTime += delta;
     }

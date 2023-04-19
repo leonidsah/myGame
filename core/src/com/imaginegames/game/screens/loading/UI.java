@@ -14,11 +14,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.imaginegames.game.MyGame;
+import com.imaginegames.game.MyGameMain;
 import com.imaginegames.game.Values;
 
-class UI implements com.imaginegames.game.screens.UI {
-    final MyGame game;
+abstract class UI implements com.imaginegames.game.screens.UI {
+    final MyGameMain game;
     Skin skin;
     Stage stage;
     ScreenViewport screenViewport;
@@ -33,7 +33,7 @@ class UI implements com.imaginegames.game.screens.UI {
     float progress = 0f;
     float loadingTime;
     boolean setUpProgressBar = true, setUpLogo = true;
-    UI (MyGame game) { this.game = game; }
+    UI (MyGameMain game) { this.game = game; }
 
     @Override
     public final void show() {
@@ -41,7 +41,7 @@ class UI implements com.imaginegames.game.screens.UI {
         rootTable = new Table();
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
-        stage.setDebugAll(Values.stagesDebug);
+        stage.setDebugAll(Values.debugMode);
         screenViewport = new ScreenViewport();
         stage.setViewport(screenViewport);
         topTable = new Table();
@@ -92,7 +92,6 @@ class UI implements com.imaginegames.game.screens.UI {
                 rootTable.add(topTable).uniform().row();
                 rootTable.add(centerTable).expand().row();
                 rootTable.add(bottomTable).uniform().expandX().fill();
-                rootTable.bottom();
                 bottomTable.add(loadingTimeLabel).left().padLeft(5f).padBottom(5f).uniform();
                 bottomTable.add(percentageLabel).padBottom(5f).expandX();
                 bottomTable.add(versionLabel).right().padRight(5f).padBottom(5f).uniform().row();
@@ -125,6 +124,6 @@ class UI implements com.imaginegames.game.screens.UI {
         stage.getViewport().update(width, height, true);
     }
 
-    void external() {}
+    abstract void external();
 }
 

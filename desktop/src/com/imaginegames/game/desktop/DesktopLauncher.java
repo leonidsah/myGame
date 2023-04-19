@@ -4,7 +4,7 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
-import com.imaginegames.game.MyGame;
+import com.imaginegames.game.MyGameMain;
 import com.imaginegames.game.Values;
 
 public class DesktopLauncher {
@@ -24,6 +24,6 @@ public class DesktopLauncher {
 		config.fullscreen = Values.fullscreenMode;
 		config.title = "myGame" + " " + Values.VERSION + " | " + Values.WELCOME_TITLE;
 		config.addIcon("desktop-icon.png", Files.FileType.Internal);
-		new LwjglApplication(new MyGame(), config);
+		new LwjglApplication(new MyGameMain(), config);
 	}
 }

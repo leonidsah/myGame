@@ -42,7 +42,7 @@ public class MatrixGenerator {
         cells = new int[height][width];
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                cells[i][j] = (int) (Math.log(i + j) * 100);
+                cells[i][j] = (int) (Math.log(i + j) * 800) % 256;
             }
         }
         return cells;

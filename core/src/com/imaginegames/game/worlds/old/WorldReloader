@@ -1,0 +1,87 @@
+package com.imaginegames.game.worlds.old;
+
+import com.badlogic.gdx.Gdx;
+import com.imaginegames.game.utils.math.IntPair;
+import com.imaginegames.game.worlds.Chunk;
+import com.imaginegames.game.worlds.ChunkGenerator;
+
+import java.io.File;
+
+public class WorldReloader {
+    private Chunk[][] field;
+    private byte fieldWidth, fieldHeight;
+    private ChunkManager cm;
+    private ChunkGenerator cg;
+    private float oldx, oldy;
+    private boolean alwaysUpdate = true;
+    private long lastReloadTime = 0;
+
+    public WorldReloader(Chunk[][] field, byte fieldWidth, byte fieldHeight, String worldFileName,
+                         float initialX, float initialY) {
+        this.field = field;
+        this.fieldWidth = fieldWidth;
+        this.fieldHeight = fieldHeight;
+        oldx = initialX - (initialX >= 0 ? 0 : Chunk.getSize());
+        oldy = initialY - (initialY >= 0 ? 0 : Chunk.getSize());
+        cm = new ChunkManager(worldFileName);
+        cg = new ChunkGenerator(0);
+
+        for (int cy = 0; cy < fieldHeight; cy++) {
+            for (int cx = 0; cx < fieldWidth; cx++) {
+                field[cy][cx] = new Chunk(new IntPair(
+                        (int) oldx / Chunk.getSize() + cx,
+                        (int) oldy / Chunk.getSize() + cy));
+            }
+        }
+        Chunk[] chunks = new Chunk[fieldWidth * fieldHeight];
+        int count = 0;
+        for (int i = 0; i < fieldHeight; i++) {
+            for (int j = 0; j < fieldWidth; j++) {
+                chunks[count] = field[i][j];
+                count++;
+            }
+        }
+        //cm.loadFromLimitedWorld(chunks);
+        cg.generateChunks(chunks);
+        File file = Gdx.files.internal(worldFileName).file();
+        boolean exist = file.getAbsoluteFile().exists();
+        System.out.printf("%s, %s", file.getAbsoluteFile().getAbsolutePath(), exist);
+        /*if (exist) {
+            try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(file))) {
+                dos.writeChar('c');
+                dos.writeChar('h');
+                dos.writeChar('a');
+                dos.writeChar('r');
+            } catch (IOException ex) {
+                System.err.println(ex.getMessage());
+            }
+        }*/
+    }
+
+    public void reload(float x, float y, float z) {
+        lastReloadTime = System.currentTimeMillis();
+        x -= (x >= 0 ? 0 : Chunk.getSize());
+        y -= (y >= 0 ? 0 : Chunk.getSize());
+        if ((int) x / Chunk.getSize() != (int) oldx / Chunk.getSize()
+                || (int) y / Chunk.getSize() != (int) oldy / Chunk.getSize() || alwaysUpdate) {
+            for (int cy = 0; cy < fieldHeight; cy++) {
+                for (int cx = 0; cx < fieldWidth; cx++) {
+                    field[cy][cx] = new Chunk(new IntPair(
+                            (int) x / Chunk.getSize() + cx,
+                            (int) y / Chunk.getSize() + cy));
+                }
+            }
+            Chunk[] chunks = new Chunk[fieldWidth * fieldHeight];
+            int count = 0;
+            for (int i = 0; i < fieldHeight; i++) {
+                for (int j = 0; j < fieldWidth; j++) {
+                    chunks[count] = field[i][j];
+                    count++;
+                }
+            }
+            cg.generateChunks(chunks, z);
+            oldx = x;
+            oldy = y;
+        }
+    }
+}

@@ -1,63 +1,148 @@
 package com.imaginegames.game.worlds;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.imaginegames.game.utils.math.IntPair;
 
 import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Arrays;
+import java.io.BufferedOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
-import static java.lang.Math.abs;
+import java.util.Set;
 
 public class ChunkManager {
-    private String worldFileName;
-    private DataInputStream dis;
-    private int worldWidth, worldHeight, worldCWidth, worldCHeight;
+    private Chunk[][] chunkField;
+    private HashMap<IntPair, Chunk> chunksToSave = new HashMap<>();
+    private byte chunkFieldWidth, chunkFieldHeight;
+    private FileHandle worldDir;
+    private long seed;
+    private byte chunkSize;
+    int value = 0;
+    int chunkFieldX, chunkFieldY;
+    int centerChunkX, centerChunkY;
 
-    public ChunkManager(String worldFileName) {
-        this.worldFileName = worldFileName;
+    public ChunkManager(ProceduralWorld world, byte chunkFieldWidth, byte chunkFieldHeight) {
+        this.chunkFieldWidth = chunkFieldWidth;
+        this.chunkFieldHeight = chunkFieldHeight;
+        chunkField = new Chunk[chunkFieldWidth][chunkFieldHeight];
+        worldDir = world.getDirectory();
+        seed = world.getSeed();
+        chunkSize = world.getChunkSize();
     }
 
-    // Returns true if loading is successful (e.g. no exceptions have occurred during reading file)
-    public boolean load(Chunk[] chunks) {
-        int worldWidth, worldHeight, cellCount = 0, cellX = 0, cellY = 0, val;
-        HashMap<IntPair, Chunk> chunkMap = new HashMap<>();
-        try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(Gdx.files.local("localAssets/worlds/" + worldFileName).file())))) {
-            worldWidth = dis.readInt();
-            worldHeight = dis.readInt();
-            worldCWidth = worldWidth / Chunk.getSize();
-            worldCHeight = worldWidth / Chunk.getSize();
+    /** ChunkField coordinates are the coordinates of the it's center chunk */
+    public void updateChunkField(int chunkFieldX, int chunkFieldY) {
+        this.chunkFieldX = chunkFieldX;
+        this.chunkFieldY = chunkFieldY;
+        centerChunkX = chunkFieldX;
+        centerChunkY = chunkFieldY;
+        chunkFieldX -= chunkFieldWidth / 2;
+        chunkFieldY -= chunkFieldHeight / 2;
 
-            if (worldWidth <= 0 || worldHeight <= 0) {
-                throw new IllegalArgumentException("Wrong/corrupted world file: WorldWidth or WorldHeight was read as value which is <= 0");
+        int i, j;
+        for (i = 0; i < chunkFieldWidth; i++)
+            for (j = 0; j < chunkFieldHeight; j++) {
+                chunkField[i][j] = getChunk(chunkFieldX + i, chunkFieldY + j);
             }
-            for (Chunk c : chunks) {
-                int x = c.getXY().getX() >= 0 ? c.getXY().getX() % (worldCWidth) :
-                        (worldCWidth - (abs(c.getXY().getX() % (worldCWidth)))) % worldCWidth;
-                int y = c.getXY().getY() >= 0 ? c.getXY().getY() % (worldCHeight) :
-                        (worldCHeight - (abs(c.getXY().getY() % (worldCHeight)))) % worldCWidth;
-                chunkMap.put(new IntPair(x, y), c);
-            }
+    }
 
-            while (dis.available() > 0) {
-                val = dis.readInt();
-                Chunk c = chunkMap.get(new IntPair(cellX / Chunk.getSize(), cellY / Chunk.getSize()));
-                if (c != null) {
-                    int[][] cells = c.getCells();
-                    cells[cellX % Chunk.getSize()][cellY % Chunk.getSize()] = val;
+    public void setCell(float x, float y, int value) {
+        int chunkX, chunkY, cellX, cellY;
+        int leftBottomChunkX, leftBottomChunkY, rightTopX, rightTopY;
+        leftBottomChunkX = centerChunkX - chunkFieldWidth / 2;
+        leftBottomChunkY = centerChunkY - chunkFieldHeight / 2;
+        rightTopX = centerChunkX + (chunkFieldWidth - chunkFieldWidth / 2) - 1;
+        rightTopY = centerChunkY + (chunkFieldHeight - chunkFieldHeight / 2) - 1;
+        chunkX = Chunk.getChunkCoord(x, chunkSize);
+        chunkY = Chunk.getChunkCoord(y, chunkSize);
+
+        if (chunkX < leftBottomChunkX || chunkX > rightTopX) return;
+        if (chunkY < leftBottomChunkY || chunkY > rightTopY) return;
+
+        cellX = Chunk.getCellCoord(x, chunkSize);
+        cellY = Chunk.getCellCoord(y, chunkSize);
+
+        chunkField[chunkX - leftBottomChunkX][chunkY - leftBottomChunkY].setCell(cellX, cellY, value);
+        markToSave(chunkX, chunkY, chunkField[chunkX - leftBottomChunkX][chunkY - leftBottomChunkY]);
+    }
+    
+    private Chunk getChunk(int chunkX, int chunkY) {
+        Chunk chunk;
+        // If chunk was modified - then load it
+        if (isModified(chunkX, chunkY)) {
+            //System.out.println("chunkX = " + chunkX + "    chunkY = " + chunkY + " isModified: " + isModified(chunkX, chunkY));
+            return chunksToSave.get(new IntPair(chunkX, chunkY));
+        }
+        // Try to load chunk from the disk
+        else if (isSaved(chunkX, chunkY)) {
+            chunk = loadChunk(chunkX, chunkY);
+        }
+        // Mark chunk with coords (0, 0)
+        else if (chunkX == 0 && chunkY == 0) {
+            chunk = new Chunk(chunkSize);
+            int[][] cells = new int[chunkSize][chunkSize];
+            for (int i = 0; i < chunkSize; i++)
+                for (int j = 0; j < chunkSize; j++) {
+                    value = 50;
+                    chunk.setCell(i, j, value);
                 }
-                cellCount++;
-                cellX = cellCount % worldWidth;
-                cellY = cellCount / worldWidth;
-            }
-            return true;
         }
-        catch (IOException e) {
-            System.err.printf("An exception has occurred in ChunkManager: %s :: %s", e.toString(), e.getMessage());
-            return false;
+        // If chunk has never been generated - then generate it
+        else {
+            // Do not use setCell method here, it leads to buggy recursion things
+            chunk = ChunkGenerator.generateChunk(chunkX, chunkY, seed, chunkSize);
+        }
+        return chunk;
+    }
+
+    private void markToSave(int chunkX, int chunkY, Chunk chunk) {
+        IntPair coords = new IntPair(chunkX, chunkY);
+        if (chunksToSave.containsKey(coords)) chunksToSave.remove(coords);
+        else chunksToSave.put(coords, chunk);
+        chunksToSave.put(coords, chunk);
+    }
+    
+    private boolean isSaved(int chunkX, int chunkY) {
+        return worldDir.child(chunkX + "_" + chunkY).exists();
+    }
+
+    private boolean isModified(int chunkX, int chunkY) {
+        return chunksToSave.containsKey(new IntPair(chunkX, chunkY));
+    }
+    
+    public void saveChunks() {
+        Set<IntPair> keySet = chunksToSave.keySet();
+        for (IntPair chunkCoords: keySet) {
+            FileHandle dataFile = worldDir.child(chunkCoords.getX() + "_" + chunkCoords.getY());
+            try (ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(dataFile.write(false)))) {
+                oos.writeObject(chunksToSave.get(chunkCoords));
+            } catch (Exception e) {
+                System.err.println("An exception has occurred has occurred during writing: " + e);
+            }
         }
     }
-    // public void saveChunks(World world, Chunk[] chunks) { }
+
+    private Chunk loadChunk(int chunkX, int chunkY) {
+        FileHandle dataFile = worldDir.child(chunkX + "_" + chunkY);
+        Chunk chunk = null;
+        try (ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(dataFile.read()))) {
+            chunk = (Chunk) ois.readObject();
+        }
+        catch (Exception e) { System.err.println("An exception has occurred during reading: " + e); }
+        finally { return chunk; }
+    }
+
+    public Chunk[][] getChunkField() { return chunkField; }
+
+    public byte getChunkSize() {
+        return chunkSize;
+    }
+
+    public byte getChunkFieldWidth() {
+        return chunkFieldWidth;
+    }
+
+    public byte getChunkFieldHeight() {
+        return chunkFieldHeight;
+    }
 }

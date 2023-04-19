@@ -1,6 +1,7 @@
 package com.imaginegames.game.ui.chat;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.imaginegames.game.ui.chat.messages.Message;
 import com.imaginegames.game.ui.chat.messages.MessageHandler;
 import com.imaginegames.game.ui.chat.messages.MessageType;
@@ -12,10 +13,23 @@ public class ChatLabel extends Label implements MessageHandler {
     private ArrayList<Message> messageList;
     private String chatString;
     private CommandProcessor commandProcessor;
+    private int capacity;
 
-    public ChatLabel(LabelStyle labelStyle) {
+    public ChatLabel(LabelStyle labelStyle, int capacity) {
         super("", labelStyle);
-        messageList = new ArrayList<>(10);
+        this.capacity = capacity;
+        messageList = new ArrayList<>(capacity);
+        setUpCommandProcessor();
+    }
+
+    public ChatLabel(Skin skin, int capacity) {
+        super("", skin);
+        this.capacity = capacity;
+        messageList = new ArrayList<>(capacity);
+        setUpCommandProcessor();
+    }
+
+    private void setUpCommandProcessor() {
         commandProcessor = new CommandProcessor(this);
         commandProcessor.addCommand(new Command("notacommand") {
             @Override
@@ -56,7 +70,7 @@ public class ChatLabel extends Label implements MessageHandler {
         if (!message.isDenied()) {
             messageList.add(0, message);
             // Remove last message to remain chat bounded
-            if (messageList.size() == 10) messageList.remove(9);
+            if (messageList.size() == capacity) messageList.remove(capacity - 1);
             appendMessagesToChat();
         }
     }
@@ -66,7 +80,7 @@ public class ChatLabel extends Label implements MessageHandler {
         TextMessage textMessage = new TextMessage(message, "console");
         messageList.add(0, textMessage);
         // Remove last message to remain chat bounded
-        if (messageList.size() == 10) messageList.remove(9);
+        if (messageList.size() == capacity) messageList.remove(capacity - 1);
         appendMessagesToChat();
     }
 

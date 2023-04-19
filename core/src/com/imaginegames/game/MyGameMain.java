@@ -7,7 +7,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.imaginegames.game.screens.loading.LoadingScreen;
 import com.imaginegames.game.utils.SettingsPreferences;
 
-public class MyGame extends Game {
+public class MyGameMain extends Game {
     public AssetManager assets; // Shouldn't be static, as mentioned on AssetManager page on GitHub wiki
 
     @Override
